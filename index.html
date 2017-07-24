@@ -1,0 +1,241 @@
+<!doctype html>
+<html class="container-fluid" ng-app="app">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Kanban board by Anatolii</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.5/angular.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script>
+
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="css/app.css">
+
+    <script src="scripts/app.js"></script>
+    <script src="scripts/storageService.js"></script>
+    <script src="scripts/dndLists.js"></script>
+    <script src="scripts/dndController.js"></script>
+
+</head>
+<body>
+
+<div class="page-header">
+    <h1 class="text-primary text-center">Kanban Board (The output of draggable zones with prioritization)</h1>
+</div>
+
+<div ng-controller="dndController">
+    <div class="alert alert-success">
+        Drag and drop the list of items to move them around
+    </div>
+
+    <div class="row-fluid">
+        <div class="col-md-8">
+            <button class="btn btn-danger" data-toggle='modal' data-target='#addNewTaskModal'>Add New Task</button>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="col-md-4">
+            <button class="btn btn-danger pull-right" ng-click="toggleGeneratedModel()">Hide Model</button>
+        </div>
+    </div>
+    <br><br><br>
+
+
+    <div class="fourDndLists row-fluid">
+
+        <div class="col-md-8" id="kanbanBoard">
+            <div class="row-fluid">
+                <div ng-repeat="(listName, list) in models.lists" class="col-md-3">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h3 class="panel-title text-center">{{listName}}</h3>
+                        </div>
+                        <div class="panel-body">
+                            <ul dnd-list="list">
+                                <li ng-repeat="item in list"
+                                    dnd-draggable="item"
+                                    dnd-moved="list.splice($index, 1); updateLocalStorage()"
+                                    ng-click="preloadEditTask($index, item, list, models.lists)"
+                                    dnd-effect-allowed="move" title="Move it! =)"
+                                    dnd-selected="models.selected = item"
+                                    dnd-disable-if="models.lists['Done'] == list || models.lists['Aborted'] == list"
+                                    ng-class="{'selected': models.selected === item, 'low' : item.priority == 'low', 'normal' : item.priority == 'normal', 'hight' : item.priority == 'hight'}">
+                                    {{item.label}}
+                                    <a class="pull-right"
+                                       ng-show="models.lists['Aborted'] == list || models.lists['Done'] == list"
+                                       ng-click="preloadDeleteItem($index, item, list)"><i class="glyphicon glyphicon-remove"></i>
+                                    </a>
+                                    <br>
+                                    <span class="font-size-small">{{item.time}}</span>
+
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div view-source="simple"></div>
+
+        </div>
+
+        <div class="col-md-4" id="generatedModel">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Generated Model</h3>
+                </div>
+                <div class="panel-body">
+                    <pre class="code">{{modelAsJson}}</pre>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal window for adding new task -->
+    <div id="addNewTaskModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"></button>
+                    <h3 class="modal-title text-center">Add New Task</h3>
+                </div>
+
+                <div class="modal-body text-center">
+                    <form class="form-horizontal" name="addNewTaskForm" id="addNewTaskForm">
+                        <fieldset>
+                            <!-- Kanban card name -->
+                            <div class="form-group">
+                                <label class="col-md-4 control-label" for="kanban_card_name">Kanban card title: </label>
+                                <div class="col-md-6">
+                                    <input id="kanban_card_name" name="kanban_card_name" type="text"
+                                           class="form-control input-md"
+                                           ng-model='kanban_card_name' ng-pattern='/^[a-zA-Z0-9_\s]+$/' required>
+                                </div>
+                            </div>
+
+                            <!-- Kanban card priority-->
+                            <div class="form-group">
+                                <label class="col-md-4 control-label" for="kanban_card_priority">Kanban card
+                                    priority: </label>
+                                <div class="col-md-6">
+                                    <select class='form-control' id="kanban_card_priority" name="kanban_card_priority">
+                                        <option ng-repeat="item in kanbanCardPriorityArr" value="{{ item.priority }}">
+                                            {{item.priority }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </fieldset>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" ng-disabled='addNewTaskForm.$invalid'
+                            data-dismiss="modal"
+                            ng-click="addTasks('#addNewTaskForm');">&ensp;Add&ensp;
+                    </button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal"
+                            ng-click="cleanAddTaskModal()">Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--End of new task modal window-->
+
+
+    <!-- Modal window for editing Task -->
+    <div id="mdEditTask" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"></button>
+                    <h3 class="modal-title text-center">Set New Task Values</h3>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" id="edit_task_form" name="edit_task_form">
+                        <fieldset>
+
+                            <!-- Task name -->
+
+                            <div class="form-group" ng-if="toggleTaskName">
+                                <label class="col-md-4 control-label" for="edit_task_name">Kanban card title: </label>
+                                <div class="col-md-6">
+                                    <input id="edit_task_name" ng-init='edit_task_name = "1"'
+                                           ng-model='currentDataItem.label' ng-pattern='/^[a-zA-Z0-9_\s]+$/'
+                                           name="edit_task_name" type="text" class="form-control input-md" required>
+                                </div>
+                            </div>
+
+                            <!-- edit task priority -->
+                            <div class="form-group">
+                                <label class="col-md-4 control-label" for="edit_task_priority">Kanban card
+                                    priority: </label>
+                                <div class="col-md-6">
+                                    <select class='form-control' id="edit_task_priority" name="edit_task_priority"
+                                            ng-model="currentDataItem.priority">
+                                        <option ng-repeat="item in kanbanCardPriorityArr" value="{{ item.priority }}">
+                                            {{item.priority }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </fieldset>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">&ensp;Edit&ensp;</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End of modal window for editing Task -->
+
+
+    <!-- Modal window for remove Task Item confirmation -->
+    <div id="confirmDeleteItem" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"></button>
+                    <h3 class="modal-title text-center">Are you sure?</h3>
+                </div>
+                <div class="modal-body text-center">
+                    <h4>You are going to delete Kanban card: <span
+                            class="lightblue">{{ currentDeleteItem.label }}</span></h4>
+                    <h4>With priority: <span class="lightblue">{{ currentDeleteItem.priority }}</span></h4>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger"
+                            ng-click="deleteItem()" data-dismiss="modal">Delete
+                    </button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End of modal window for remove Task Item confirmation -->
+
+
+</div>
+<!--end of dndController-->
+
+</body>
+</html>

@@ -1,0 +1,103 @@
+body {
+    padding: 20px 20px;
+    min-height: 200%;
+
+}
+
+div.page-header {
+    padding: 0 5px;
+    margin: 0 0 20px 0;
+}
+
+div.panel-body {
+    margin-bottom: -10px;
+}
+
+/**
+ * The dnd-list should always have a min-height,
+ * otherwise you can't drop to it once it's empty
+ */
+.fourDndLists ul[dnd-list] {
+    min-height: 500px;
+    padding-left: 0px;
+}
+
+/**
+ * The dndDraggingSource class will be applied to
+ * the source element of a drag operation. It makes
+ * sense to hide it to give the user the feeling
+ * that he's actually moving it.
+ */
+.fourDndLists ul[dnd-list] .dndDraggingSource {
+    display: none;
+}
+
+/**
+ * An element with .dndPlaceholder class will be
+ * added to the dnd-list while the user is dragging
+ * over it.
+ */
+.fourDndLists ul[dnd-list] .dndPlaceholder {
+    background-color: #ddd;
+    display: block;
+    min-height: 62px;
+}
+
+.fourDndLists ul[dnd-list] li {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-top-right-radius: 4px;
+    border-top-left-radius: 4px;
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: 0px;
+    cursor: pointer;
+}
+
+/**
+ * Show selected elements in green
+ */
+/*.fourDndLists ul[dnd-list] li.selected {
+    background-color: #dff0d8;
+    color: #3c763d;
+}*/
+
+.fourDndLists div ul li.low {
+    background-color: #C1F7C2;
+}
+
+.fourDndLists div ul li.normal {
+    background-color: #94D6FF;
+}
+
+.fourDndLists div ul li.hight {
+    background-color: #FFB5B5;
+}
+
+.glyphicon-remove {
+    cursor: url("http://a.deviantart.net/avatars/c/l/clouddustmare.png"), auto;
+}
+
+.lightblue {
+    color: #337ab7;
+}
+
+a {
+    color: #444;
+}
+.font-size-small {
+    font-size: 10px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
